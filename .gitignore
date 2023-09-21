@@ -1,0 +1,6 @@
+certs/
+!tests/certs/
+.coverage
+__pycache__
+.pytest_cache
+scan_results_report.json
