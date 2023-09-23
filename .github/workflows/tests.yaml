@@ -1,0 +1,49 @@
+---
+name: Docker Registry Scanner Tests
+
+on:
+  workflow_call:
+    inputs:
+      coverage_min:
+        description: Minimum code coverage
+        required: true
+        type: string
+
+permissions: read-all
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install Pytest And Coverage
+        run: python -m pip install pytest coverage
+
+      - name: Run Unit Testing
+        env:
+          PYTHONPATH: src/
+        run: python -m coverage run -m pytest -v tests/
+
+      - name: Check Coverage
+        id: coverage
+        continue-on-error: true
+        run: coverage report -m --fail-under ${{ inputs.coverage_min }} --omit 'tests/*'
+
+      - name: Coverage Result
+        run: |
+          if [ "${{ steps.coverage.outcome }}" == "failure" ]
+          then
+            echo "::warning::BNPPF code coverage NOK 💀 (<${{ inputs.coverage_min }}%)"
+            exit 1
+          else
+            echo "::notice::BNPPF code coverage OK 🎉 (>${{ inputs.coverage_min }}%)"
+          fi
